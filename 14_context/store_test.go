@@ -25,7 +25,7 @@ func TestHandler(t *testing.T) {
 			t.Errorf(`got "%s", want "%s"`, response.Body.String(), data)
 		}
 
-		store.assertWasNotCancelled()
+		// store.assertWasNotCancelled()
 	})
 
 	t.Run("tells store to cancel work if request is cancelled", func(t *testing.T) {
@@ -37,24 +37,26 @@ func TestHandler(t *testing.T) {
 		time.AfterFunc(5*time.Millisecond, cancel)
 		request = request.WithContext(cancellingCtx)
 
-		response := httptest.NewRecorder()
+		response := &SpyResponseWriter{}
 
 		svr.ServeHTTP(response, request)
 
-		store.assertWasCancelled()
+		if response.written {
+			t.Error("a response should not have been written")
+		}
 	})
 }
 
-func (s *SpyStore) assertWasCancelled() {
-	s.t.Helper()
-	if !s.cancelled {
-		s.t.Errorf("store was not told to cancel")
-	}
-}
+// func (s *SpyStore) assertWasCancelled() {
+// 	s.t.Helper()
+// 	if !s.cancelled {
+// 		s.t.Errorf("store was not told to cancel")
+// 	}
+// }
 
-func (s *SpyStore) assertWasNotCancelled() {
-	s.t.Helper()
-	if s.cancelled {
-		s.t.Errorf("store was told to cancel")
-	}
-}
+// func (s *SpyStore) assertWasNotCancelled() {
+// 	s.t.Helper()
+// 	if s.cancelled {
+// 		s.t.Errorf("store was told to cancel")
+// 	}
+// }
